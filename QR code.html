@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.1.1/html5-qrcode.min.js"></script>
+    <style>
+        #qr-reader {
+            width: 300px;
+            margin: auto;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #file-upload {
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="qr-reader"></div>
+    <input type="file" id="file-upload" accept="image/*">
+    <div id="result">
+        <h3>Scanned Result:</h3>
+        <p id="output"></p>
+        <a id="link" href="#" target="_blank" style="display: none;">Open Link</a>
+    </div>
+    <script>
+        const resultElement = document.getElementById('output');
+        const linkElement = document.getElementById('link');
+
+        function onScanSuccess(decodedText, decodedResult) {
+            resultElement.textContent = decodedText;
+            if (decodedText.startsWith('http')) {
+                linkElement.href = decodedText;
+                linkElement.style.display = 'block';
+            } else {
+                linkElement.style.display = 'none';
+            }
+        }
+
+        var html5QrCode = new Html5Qrcode("qr-reader");
+        html5QrCode.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: 250
+            },
+            onScanSuccess
+        ).catch(err => {
+            console.log(err);
+        });
+
+        const fileUpload = document.getElementById('file-upload');
+        fileUpload.addEventListener('change', event => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = e => {
+                html5QrCode.scanFile(e.target.result, true)
+                    .then(decodedText => {
+                        onScanSuccess(decodedText);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>
